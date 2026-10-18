@@ -101,5 +101,28 @@ ariexus/
 
 > Status: architecture documentation; implementation and deployment claims require independent verification.
 
+```mermaid
+flowchart TB
+  User([CLI operator]) --> Args[Parse command and flags]
+  Args --> Canonicalize[Canonicalize requested paths]
+  Canonicalize --> Containment{Within approved root?}
+  Containment -->|no| RejectPath[Reject traversal]
+  Containment -->|yes| CommandGate{Command allowlisted?}
+  CommandGate -->|no| RejectCmd[Reject command]
+  CommandGate -->|yes| Approval{Approval required?}
+  Approval -->|yes| VerifyApproval[Validate identity, scope, expiry, nonce]
+  Approval -->|no| Execute[Execute bounded action]
+  VerifyApproval -->|invalid| RejectApproval[Reject request]
+  VerifyApproval -->|valid| Execute
+  Execute --> Result[Capture exit code and output metadata]
+  Result --> Ledger[Append audit evidence]
+  Result --> Retry{Transient failure and retry budget left?}
+  Retry -->|yes| Execute
+  Retry -->|no| Return[Return result or explicit failure]
+  RejectPath --> Ledger
+  RejectCmd --> Ledger
+  RejectApproval --> Ledger
+```
+
 **Evidence note:** Confirm that path containment, approval binding, retries, and audit behavior are implemented and tested; the diagram itself is not a security attestation.
 

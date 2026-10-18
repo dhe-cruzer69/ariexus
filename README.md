@@ -49,6 +49,28 @@ python -m arxus.cli chat "read hello.txt"
 - Write operations require approval
 - All tool calls are audited
 
+<!-- X4-APEX-DIAGRAM-START:ariexus -->
+
+```mermaid
+flowchart TD
+    USER[CLI User] --> PARSE[Intent Parsing]
+    PARSE --> GRAPH[Task Graph]
+    GRAPH --> POLICY[Policy and Tool Registry]
+    POLICY -->|blocked or outside root| DENY[Reject]
+    POLICY -->|sensitive write| APPROVAL[Approval Request]
+    POLICY -->|allowed| EXEC[Executor]
+    APPROVAL -->|approved| EXEC
+    APPROVAL -->|denied| DENY
+    EXEC --> FS[Workspace Filesystem Tool]
+    EXEC --> TERM[Allow-listed Terminal Tool]
+    FS --> AUDIT[Audit Log]
+    TERM --> AUDIT
+    EXEC --> RECOVERY[Timeout, Retry, Compensation Plan]
+    RECOVERY --> RESULT[CLI Result]
+```
+
+<!-- X4-APEX-DIAGRAM-END:ariexus -->
+
 ## Project Layout
 
 ```
